@@ -209,7 +209,7 @@ module EventMachine
           return res["StatusCode"]
         end
 
-        def delete
+        def delete(opts={})
           # DELETE /containers/(id)
           query_params = @client._parse_query_params( ["v"], opts )
 
