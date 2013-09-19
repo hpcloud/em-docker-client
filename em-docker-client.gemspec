@@ -13,4 +13,5 @@ Gem::Specification.new do |gem|
   gem.version       = 0.1
 
   gem.add_dependency("eventmachine", "~> 1.0.3")
+  gem.add_dependency("em-http-request", "~> 1.1.0")
 end
