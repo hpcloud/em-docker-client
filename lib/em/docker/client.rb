@@ -84,9 +84,28 @@ module EventMachine
         # return EM::Docker::Client::Container object
       end
 
-      def images
+      def images(opts={})
         # GET /images/json
-        # returns array of EM::Docker::Client::Image objects
+        
+        query_params = _parse_query_params( ["all"], opts )
+
+        images = []
+
+        j_images = _make_request( :method => 'GET', :path => '/images/json', :expect => 'json', :query_params => query_params )
+        j_images.each do |image_hash|
+          image = EM::Docker::Client::Image.from_hash({
+            :id           => image_hash["Id"],
+            :repository   => image_hash["Repository"],
+            :tag          => image_hash["Tag"],
+            :created      => Time.at( image_hash["Created"] ),
+            :size         => image_hash["Size"],
+            :virtual_size => image_hash["VirtualSize"],
+          })
+
+          images << image
+        end
+
+        images
       end
 
       def create_image
