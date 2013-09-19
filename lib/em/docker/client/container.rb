@@ -99,6 +99,10 @@ module EventMachine
             end
           end
 
+          if opts[:cmd]
+            req_hash["Cmd"] = Shellwords.shellwords(opts[:cmd])
+          end
+
           @client ||= opts[:client]
           res = @client._make_request( :method => 'POST', :path => "/containers/create", :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
