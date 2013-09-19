@@ -15,6 +15,8 @@ module EventMachine
         def initialize(id, opts={})
           @id = id
 
+          @client = opts[:client]
+
           @repository  = opts[:repository]
           @tag         = opts[:tag]
           @created     = opts[:created]

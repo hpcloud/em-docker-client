@@ -1,3 +1,7 @@
+require 'date'
+
+require 'em/docker/client/util'
+
 module EventMachine
   class Docker
     class Client
@@ -15,6 +19,8 @@ module EventMachine
         def initialize(id, opts={})
           @id = id
 
+          @client = opts[:client]
+
           @image       = opts[:image]
           @command     = opts[:command]
           @created     = opts[:created]
@@ -24,7 +30,18 @@ module EventMachine
         end
 
         def info
-          # GET /containers/(id)/info
+          # GET /containers/(id)/json
+          res = @client._make_request( :method => 'GET', :path => "/containers/#{@id}/json" )
+
+          # res is a very large hash, so we'll do minimal (mostly automated) processing on it
+          res = EM::Docker::Client::Util.process_go_hash(res)
+          res[:created] = DateTime.iso8601( res[:created] ).to_time
+
+          if res[:state][:started_at]
+            res[:state][:started_at] = DateTime.iso8601( res[:state][:started_at] ).to_time
+          end
+
+          res
         end
 
         def processes

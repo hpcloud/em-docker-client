@@ -65,6 +65,8 @@ module EventMachine
             # :ports     => container_hash["Ports"],
             :size_rw     => container_hash["SizeRw"],
             :size_rootfs => container_hash["SizeRootFs"],
+
+            :client => self,
           })
 
           containers << container
@@ -80,8 +82,7 @@ module EventMachine
       end
 
       def container(id)
-        # GET /containers/(id)/json
-        # return EM::Docker::Client::Container object
+        EM::Docker::Client::Container.new(id, :client => self)
       end
 
       def images(opts={})
@@ -100,6 +101,8 @@ module EventMachine
             :created      => Time.at( image_hash["Created"] ),
             :size         => image_hash["Size"],
             :virtual_size => image_hash["VirtualSize"],
+
+            :client => self,
           })
 
           images << image
@@ -155,7 +158,14 @@ module EventMachine
         res = http.response
 
         if expect == 'json'
-          return JSON.parse(res)
+          parsed = nil
+          begin
+            parsed = JSON.parse(res)
+          rescue
+            raise "request #{method.upcase} #{path} failed, unable to parse response from server: #{res}"
+          end
+
+          return parsed
         else
           raise "unable to parse expected value #{expect}"
         end
