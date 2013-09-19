@@ -4,10 +4,106 @@ module EventMachine
   class Docker
     class Client
       class Container
-        attr_reader :id, :image, :command, :created, :status, :size_rw, :size_rootfs
+        attr_reader :id, :image, :command, :created, :status, :size_rw, :size_rootfs, :config
 
-        def self.create()
-          # XXX
+        def self.create(opts={})
+          req_hash = {}
+
+          mapping = {
+            "Hostname" => {
+              :source  => :host,
+              :default => "",
+            },
+            "User" => {
+              :source  => :user,
+              :default => "",
+            },
+            "Memory" => {
+              :source  => :memory,
+              :default => 0,
+            },
+            "MemorySwap" => {
+              :source  => :memory_swap,
+              :default => 0,
+            },
+            "AttachStdin" => {
+              :source => :attach_stdin,
+              :default => false,
+            },
+            "AttachStdout" => {
+              :source => :attach_stdout,
+              :default => false,
+            },
+            "AttachStderr" => {
+              :source => :attach_stderr,
+              :default => false,
+            },
+            "PortSpecs" => {
+              :source => :port_specs,
+              :default => nil,
+            },
+            "Privileged" => {
+              :source => :privileged,
+              :default => false,
+            },
+            "Tty" => {
+              :source => :tty,
+              :default => false,
+            },
+            "OpenStdin" => {
+              :source => :open_stdin,
+              :default => false,
+            },
+            "StdinOnce" => {
+              :source => :stdin_once,
+              :default => false,
+            },
+            "Env" => {
+              :source  => :env,
+              :default => nil,
+            },
+            "Cmd" => {
+              :source  => :cmd,
+              :default => nil,
+            },
+            "Dns" => {
+              :source  => :dns,
+              :default => nil,
+            },
+            "Image" => {
+              :source => :image,
+            },
+            "Volumes" => {
+              :source => :volumes,
+              :default => {},
+            },
+            "VolumesFrom" => {
+              :source => :volumes_from,
+              :default => ""
+            },
+            "WorkingDir" => {
+              :source => :working_dir,
+              :default => "",
+            },
+          }
+
+          mapping.each do |k,v|
+            if opts.key?( v[:source] )
+              req_hash[k] = opts[ v[:source] ]
+            else
+              if v.key?(:default)
+                req_hash[k] = v[:default]
+              else
+                raise ArgumentError, "#{k} must be specified when creating container"
+              end
+            end
+          end
+
+          @client ||= opts[:client]
+          res = @client._make_request( :method => 'POST', :path => "/containers/create", :expect => 'json', :content_type => 'application/json', :data => req_hash)
+          container_id = res["Id"]
+
+          new(container_id, { :client => @client })
         end
 
         def self.from_hash(hash)
@@ -25,6 +121,7 @@ module EventMachine
           @status      = opts[:status]
           @size_rw     = opts[:size_rw]
           @size_rootfs = opts[:size_rootfs]
+          @config      = opts[:config]
         end
 
         def info
@@ -38,6 +135,10 @@ module EventMachine
           if res[:state][:started_at]
             res[:state][:started_at] = DateTime.iso8601( res[:state][:started_at] ).to_time
           end
+
+          @created = res[:created]
+          @config  = res[:config]
+          @command = res[:path] + " " + res[:args].join(" ")
 
           res
         end

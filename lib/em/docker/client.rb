@@ -77,10 +77,10 @@ module EventMachine
         containers
       end
 
-      def create_container
+      def create_container(opts={})
         # POST /containers/create
-        # EM::Docker::Client::Container.create()
-        # return EM::Docker::Client::Container object
+        opts[:client] = self
+        EM::Docker::Client::Container.create(opts)
       end
 
       def container(id)
@@ -160,7 +160,7 @@ module EventMachine
         f = Fiber.current
 
         http = nil
-        if ( (method == 'POST') && data ) # we have to use a special case for post-ed data
+        if ( (method == 'post') && data ) # we have to use a special case for post-ed data
           http = EventMachine::HttpRequest.new(full_path).post({ :body => data, :query => query_params, :head => headers })
         else
           http = EventMachine::HttpRequest.new(full_path).send(method, { :query => query_params, :head => headers })
@@ -182,7 +182,7 @@ module EventMachine
           begin
             parsed = JSON.parse(response)
           rescue
-            raise "request #{method.upcase} #{path} failed, unable to parse response from server: #{response}"
+            raise "request #{method.upcase} #{path} failed with status #{result.http_status}, unable to parse response from server: #{response}"
           end
 
           return parsed
