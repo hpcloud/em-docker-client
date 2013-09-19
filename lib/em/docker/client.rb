@@ -1,14 +1,14 @@
-require 'em/http/request'
+require 'em-http-request'
 
 require 'em/docker/client/container'
 require 'em/docker/client/image'
 
-class EventMachine
+module EventMachine
   class Docker
     class Client
-      def initialize(opts)
-        @host = opts[:host]
-        @port = opts[:port]
+      def initialize(opts={})
+        @host = opts[:host] || "127.0.0.1"
+        @port = opts[:port] || 4243
       end
 
       def info

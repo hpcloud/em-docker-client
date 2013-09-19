@@ -1,4 +1,4 @@
-class EventMachine
+module EventMachine
   class Docker
     class Client
       class Container
