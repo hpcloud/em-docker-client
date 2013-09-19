@@ -2,12 +2,25 @@ module EventMachine
   class Docker
     class Client
       class Container
+        attr_reader :id, :image, :command, :created, :status, :size_rw, :size_rootfs
+
         def self.create()
           # XXX
         end
 
-        def initialize(id)
+        def self.from_hash(hash)
+          new(hash[:id], hash)
+        end
+
+        def initialize(id, opts={})
           @id = id
+
+          @image       = opts[:image]
+          @command     = opts[:command]
+          @created     = opts[:created]
+          @status      = opts[:status]
+          @size_rw     = opts[:size_rw]
+          @size_rootfs = opts[:size_rootfs]
         end
 
         def info

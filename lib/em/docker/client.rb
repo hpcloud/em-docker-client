@@ -47,9 +47,30 @@ module EventMachine
         }
       end
 
-      def containers
+      def containers(opts={})
         # GET /containers/json
-        # returns array of EM::Docker::Client::Container objects
+        
+        query_params = _parse_query_params( ["all", "limit", "since", "before", "size"], opts )
+
+        containers = []
+
+        j_containers = _make_request( :method => 'GET', :path => '/containers/json', :expect => 'json', :query_params => query_params )
+        j_containers.each do |container_hash|
+          container = EM::Docker::Client::Container.from_hash({
+            :id          => container_hash["Id"],
+            :image       => container_hash["Image"],
+            :command     => container_hash["Command"],
+            :created     => Time.at( container_hash["Created"] ),
+            :status      => container_hash["Status"],
+            # :ports     => container_hash["Ports"],
+            :size_rw     => container_hash["SizeRw"],
+            :size_rootfs => container_hash["SizeRootFs"],
+          })
+
+          containers << container
+        end
+
+        containers
       end
 
       def create_container
@@ -78,10 +99,21 @@ module EventMachine
         # returns EM::Docker::Client::Image object
       end
 
+      def _parse_query_params(params, opts)
+        query_params = {}
+
+        params.each do |param|
+          query_params[param] = opts[ param.to_sym ] if opts[ param.to_sym ]
+        end
+
+        query_params 
+      end
+
       def _make_request(opts)
-        method = opts[:method].downcase
-        path   = opts[:path]
-        expect = opts[:expect] || 'json'
+        method       = opts[:method].downcase
+        path         = opts[:path]
+        expect       = opts[:expect] || 'json'
+        query_params = opts[:query_params] || {}
 
         uri = URI("http://#{@host}/")
         uri.port = @port
@@ -91,7 +123,7 @@ module EventMachine
 
         f = Fiber.current
 
-        http = EventMachine::HttpRequest.new(full_path).send(method)
+        http = EventMachine::HttpRequest.new(full_path).send(method, { :query => query_params })
         http.errback { f.resume(http) }
         http.callback { f.resume(http) }
 
