@@ -1,0 +1,1 @@
+class DockerContainerDoesNotExist < Exception; end

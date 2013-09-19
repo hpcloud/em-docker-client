@@ -1,7 +1,5 @@
 require 'date'
 
-require 'em/docker/client/util'
-
 module EventMachine
   class Docker
     class Client
@@ -57,20 +55,41 @@ module EventMachine
           # streams back export data
         end
 
-        def start
+        def start(opts={})
           # POST /containers/(id)/start
+
+          req_hash = {}
+
+          req_hash["Binds"] = opts[:binds] if opts[:binds]
+
+          if opts[:lxc_conf]
+            req_hash["LxcConf"] = []
+            opts[:lxc_conf].each do |k,v|
+              req_hash << { "Key" => k, "Value" => v }
+            end
+          end
+
+          @client._make_request( :method => "POST", :path => "/containers/#{@id}/start", :data => req_hash, :content_type => "application/json", :expect => 'boolean')
         end
 
-        def stop
+        def stop(opts={})
           # POST /containers/(id)/stop
+          query_params = @client._parse_query_params( ["t"], opts )
+
+          @client._make_request( :method => "POST", :path => "/containers/#{@id}/stop", :query_params => query_params, :expect => 'boolean')
         end
 
         def restart
           # POST /containers/(id)/restart
+          query_params = @client._parse_query_params( ["t"], opts )
+
+          @client._make_request( :method => "POST", :path => "/containers/#{@id}/restart", :query_params => query_params, :expect => 'boolean')
         end
 
         def kill
           # POST /containers/(id)/kill
+
+          @client._make_request( :method => "POST", :path => "/containers/#{@id}/kill", :expect => 'boolean')
         end
 
         def attach
@@ -80,10 +99,16 @@ module EventMachine
         
         def wait
           # POST /containers/(id)/wait
+
+          res = @client._make_request( :method => "POST", :path => "/containers/#{@id}/wait", :expect => 'json')
+          return res["StatusCode"]
         end
 
         def delete
           # DELETE /containers/(id)
+          query_params = @client._parse_query_params( ["v"], opts )
+
+          @client._make_request( :method => "DELETE", :path => "/containers/#{@id}", :query_params => query_params, :expect => 'boolean')
         end
 
         def copy_out

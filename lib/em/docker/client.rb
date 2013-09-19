@@ -6,6 +6,8 @@ require 'json'
 
 require 'em/docker/client/container'
 require 'em/docker/client/image'
+require 'em/docker/client/util'
+require 'em/docker/client/errors'
 
 module EventMachine
   class Docker
@@ -136,6 +138,18 @@ module EventMachine
         path         = opts[:path]
         expect       = opts[:expect] || 'json'
         query_params = opts[:query_params] || {}
+        data         = opts[:data]
+        content_type = opts[:content_type]
+
+        headers = {}
+
+        if content_type
+          headers["Content-Type"] = content_type
+        end
+
+        if data.is_a?(Hash)
+          data = data.to_json
+        end
 
         uri = URI("http://#{@host}/")
         uri.port = @port
@@ -145,7 +159,12 @@ module EventMachine
 
         f = Fiber.current
 
-        http = EventMachine::HttpRequest.new(full_path).send(method, { :query => query_params })
+        http = nil
+        if ( (method == 'POST') && data ) # we have to use a special case for post-ed data
+          http = EventMachine::HttpRequest.new(full_path).post({ :body => data, :query => query_params, :head => headers })
+        else
+          http = EventMachine::HttpRequest.new(full_path).send(method, { :query => query_params, :head => headers })
+        end
         http.errback { f.resume(http) }
         http.callback { f.resume(http) }
 
@@ -155,17 +174,20 @@ module EventMachine
           raise "request #{method.upcase} #{path} failed, error #{http.error}"
         end
 
-        res = http.response
+        response = http.response
+        result = http.response_header
 
         if expect == 'json'
           parsed = nil
           begin
-            parsed = JSON.parse(res)
+            parsed = JSON.parse(response)
           rescue
-            raise "request #{method.upcase} #{path} failed, unable to parse response from server: #{res}"
+            raise "request #{method.upcase} #{path} failed, unable to parse response from server: #{response}"
           end
 
           return parsed
+        elsif expect == 'boolean'
+          return result.successful?
         else
           raise "unable to parse expected value #{expect}"
         end
