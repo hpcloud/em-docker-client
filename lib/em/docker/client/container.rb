@@ -4,7 +4,7 @@ module EventMachine
   class Docker
     class Client
       class Container
-        attr_reader :id, :image, :command, :created, :status, :size_rw, :size_rootfs, :config
+        attr_reader :id, :image, :command, :created, :status, :size_rw, :size_rootfs, :config, :bind_mounts
 
         def self.create(opts={})
           req_hash = {}
@@ -12,19 +12,15 @@ module EventMachine
           mapping = {
             "Hostname" => {
               :source  => :host,
-              :default => "",
             },
             "User" => {
               :source  => :user,
-              :default => "",
             },
             "Memory" => {
               :source  => :memory,
-              :default => 0,
             },
             "MemorySwap" => {
               :source  => :memory_swap,
-              :default => 0,
             },
             "AttachStdin" => {
               :source => :attach_stdin,
@@ -32,58 +28,51 @@ module EventMachine
             },
             "AttachStdout" => {
               :source => :attach_stdout,
-              :default => false,
+              :default => true,
             },
             "AttachStderr" => {
               :source => :attach_stderr,
-              :default => false,
+              :default => true,
             },
             "PortSpecs" => {
               :source => :port_specs,
-              :default => nil,
             },
             "Privileged" => {
               :source => :privileged,
-              :default => false,
             },
             "Tty" => {
               :source => :tty,
-              :default => false,
+              :default => true,
             },
             "OpenStdin" => {
               :source => :open_stdin,
-              :default => false,
+              :default => true,
             },
             "StdinOnce" => {
               :source => :stdin_once,
-              :default => false,
+              :default => true,
             },
             "Env" => {
               :source  => :env,
-              :default => nil,
             },
             "Cmd" => {
               :source  => :cmd,
-              :default => nil,
+              :required => true,
             },
             "Dns" => {
               :source  => :dns,
-              :default => nil,
             },
             "Image" => {
               :source => :image,
             },
             "Volumes" => {
               :source => :volumes,
-              :default => {},
             },
             "VolumesFrom" => {
               :source => :volumes_from,
-              :default => ""
             },
             "WorkingDir" => {
               :source => :working_dir,
-              :default => "",
             },
           }
 
@@ -93,9 +82,18 @@ module EventMachine
             else
               if v.key?(:default)
                 req_hash[k] = v[:default]
-              else
+              elsif v.key?(:required)
                 raise ArgumentError, "#{k} must be specified when creating container"
               end
+            end
+          end
+
+          @bind_mounts = opts[:bind_mounts]
+
+          if opts[:bind_mounts]
+            req_hash["Volumes"] = {}
+            opts[:bind_mounts].each do |bind|
+              req_hash["Volumes"][ bind[:dest] ] = {}
             end
           end
 
@@ -107,7 +105,7 @@ module EventMachine
           res = @client._make_request( :method => 'POST', :path => "/containers/create", :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
 
-          new(container_id, { :client => @client })
+          new(container_id, { :client => @client, :bind_mounts => opts[:bind_mounts] })
         end
 
         def self.from_hash(hash)
@@ -126,6 +124,7 @@ module EventMachine
           @size_rw     = opts[:size_rw]
           @size_rootfs = opts[:size_rootfs]
           @config      = opts[:config]
+          @bind_mounts = opts[:bind_mounts]
         end
 
         def info
@@ -166,12 +165,22 @@ module EventMachine
 
           req_hash = {}
 
-          req_hash["Binds"] = opts[:binds] if opts[:binds]
-
           if opts[:lxc_conf]
             req_hash["LxcConf"] = []
             opts[:lxc_conf].each do |k,v|
               req_hash << { "Key" => k, "Value" => v }
+            end
+          end
+
+          if opts[:bind_mounts]
+            @bind_mounts = opts[:bind_mounts]
+          end
+
+          if @bind_mounts
+            req_hash["Binds"] = []
+            @bind_mounts.each do |mount|
+              mount[:mode] ||= "rw"
+              req_hash["Binds"] << "#{mount[:src]}:#{mount[:dest]}:#{mount[:mode]}"
             end
           end
 
