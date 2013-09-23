@@ -3,20 +3,20 @@ GEM
   specs:
     addressable (2.3.5)
     cookiejar (0.3.0)
-    em-http-request (1.1.0)
-      addressable (>= 2.3.4)
+    em-http-request (1.0.3)
+      addressable (>= 2.2.3)
       cookiejar
-      em-socksify (>= 0.3)
-      eventmachine (>= 1.0.3)
-      http_parser.rb (>= 0.6.0.beta.2)
+      em-socksify
+      eventmachine (>= 1.0.0.beta.4)
+      http_parser.rb (>= 0.5.3)
     em-socksify (0.3.0)
       eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.3)
-    http_parser.rb (0.6.0.beta.2)
+    http_parser.rb (0.5.3)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  em-http-request (~> 1.1.0)
+  em-http-request (~> 1.0.3)
   eventmachine (~> 1.0.3)
