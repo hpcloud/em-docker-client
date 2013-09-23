@@ -140,6 +140,7 @@ module EventMachine
             res[:state][:started_at] = DateTime.iso8601( res[:state][:started_at] ).to_time
           end
 
+	  @id = res[:id] # update our existing (possibly shortened) id for the full ID
           @created = res[:created]
           @config  = res[:config]
           @command = res[:path] + " " + res[:args].join(" ")
