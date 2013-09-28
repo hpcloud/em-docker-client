@@ -57,7 +57,6 @@ module EventMachine
             },
             "Cmd" => {
               :source  => :cmd,
-              :required => true,
             },
             "Dns" => {
               :source  => :dns,
