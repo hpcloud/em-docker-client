@@ -92,7 +92,8 @@ module EventMachine
           if opts[:bind_mounts]
             req_hash["Volumes"] = {}
             opts[:bind_mounts].each do |bind|
-              req_hash["Volumes"][ bind[:dest] ] = {}
+              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (bind[:src] && bind[:dst])
+              req_hash["Volumes"][ bind[:dst] ] = {}
             end
           end
 
@@ -138,7 +139,7 @@ module EventMachine
             res[:state][:started_at] = DateTime.iso8601( res[:state][:started_at] ).to_time
           end
 
-	  @id = res[:id] # update our existing (possibly shortened) id for the full ID
+          @id = res[:id] # update our existing (possibly shortened) id for the full ID
           @created = res[:created]
           @config  = res[:config]
           @command = res[:path] + " " + res[:args].join(" ")
@@ -179,7 +180,8 @@ module EventMachine
             req_hash["Binds"] = []
             @bind_mounts.each do |mount|
               mount[:mode] ||= "rw"
-              req_hash["Binds"] << "#{mount[:src]}:#{mount[:dest]}:#{mount[:mode]}"
+              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (mount[:src] && mount[:dst])
+              req_hash["Binds"] << "#{mount[:src]}:#{mount[:dst]}:#{mount[:mode]}"
             end
           end
 
