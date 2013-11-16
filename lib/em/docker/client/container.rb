@@ -102,7 +102,14 @@ module EventMachine
           end
 
           @client ||= opts[:client]
-          res = @client._make_request( :method => 'POST', :path => "/containers/create", :expect => 'json', :content_type => 'application/json', :data => req_hash)
+
+          if opts[:name]
+            query_params = @client._parse_query_params( ["name"], opts )
+          else
+            query_params = nil
+          end
+
+          res = @client._make_request( :method => 'POST', :path => "/containers/create", :query_params => query_params, :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
 
           new(container_id, { :client => @client, :bind_mounts => opts[:bind_mounts] })
