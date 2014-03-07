@@ -92,7 +92,7 @@ module EventMachine
           if opts[:bind_mounts]
             req_hash["Volumes"] = {}
             opts[:bind_mounts].each do |bind|
-              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (bind[:src] && bind[:dst])
+              raise ArgumentError, "bind_mounts must have a dst attribute" unless bind[:dst]
               req_hash["Volumes"][ bind[:dst] ] = {}
             end
           end
@@ -109,6 +109,7 @@ module EventMachine
             query_params = nil
           end
 
+          puts "em-fence-client/CREATE: #{query_params} -- #{req_hash}"
           res = @client._make_request( :method => 'POST', :path => "/containers/create", :query_params => query_params, :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
 
@@ -187,11 +188,14 @@ module EventMachine
             req_hash["Binds"] = []
             @bind_mounts.each do |mount|
               mount[:mode] ||= "rw"
-              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (mount[:src] && mount[:dst])
-              req_hash["Binds"] << "#{mount[:src]}:#{mount[:dst]}:#{mount[:mode]}"
+              raise ArgumentError, "bind_mounts must have dst attribute" unless mount[:dst]
+              if mount[:src]
+                req_hash["Binds"] << "#{mount[:src]}:#{mount[:dst]}:#{mount[:mode]}"
+              end
             end
           end
 
+          puts "em-fence-client/START: #{req_hash}"
           @client._make_request( :method => "POST", :path => "/containers/#{@id}/start", :data => req_hash, :content_type => "application/json", :expect => 'boolean')
         end
 
@@ -219,7 +223,7 @@ module EventMachine
           # POST /containers/(id)/attach
           # this is a stream
         end
-        
+
         def wait
           # POST /containers/(id)/wait
 
