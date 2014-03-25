@@ -99,7 +99,7 @@ module EventMachine
           image = EM::Docker::Client::Image.from_hash({
             :id           => image_hash["Id"],
             :repository   => image_hash["Repository"],
-            :tag          => image_hash["Tag"],
+            :tags         => image_hash["RepoTags"],
             :created      => Time.at( image_hash["Created"] ),
             :size         => image_hash["Size"],
             :virtual_size => image_hash["VirtualSize"],

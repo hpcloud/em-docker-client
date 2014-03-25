@@ -2,7 +2,7 @@ module EventMachine
   class Docker
     class Client
       class Image
-        attr_reader :id, :repository, :tag, :created, :size, :virtual_size
+        attr_reader :id, :repository, :tags, :created, :size, :virtual_size
 
         def self.create()
           # XXX          
@@ -18,7 +18,7 @@ module EventMachine
           @client = opts[:client]
 
           @repository  = opts[:repository]
-          @tag         = opts[:tag]
+          @tags        = opts[:tags]
           @created     = opts[:created]
           @size        = opts[:size]
           @virtual_size = opts[:virtual_size]
