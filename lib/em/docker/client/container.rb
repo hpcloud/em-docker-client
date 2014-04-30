@@ -92,7 +92,7 @@ module EventMachine
           if opts[:bind_mounts]
             req_hash["Volumes"] = {}
             opts[:bind_mounts].each do |bind|
-              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (bind[:src] && bind[:dst])
+              raise ArgumentError, "bind_mounts must have a dst attribute" unless bind[:dst]
               req_hash["Volumes"][ bind[:dst] ] = {}
             end
           end
@@ -186,8 +186,9 @@ module EventMachine
           if @bind_mounts
             req_hash["Binds"] = []
             @bind_mounts.each do |mount|
+              next unless mount[:src] # in this case, this is a "volume", not a "bind"
               mount[:mode] ||= "rw"
-              raise ArgumentError, "bind_mounts must have a src and a dst attribute" unless (mount[:src] && mount[:dst])
+              raise ArgumentError, "bind_mounts must have a dst attribute" unless mount[:dst]
               req_hash["Binds"] << "#{mount[:src]}:#{mount[:dst]}:#{mount[:mode]}"
             end
           end
