@@ -37,9 +37,6 @@ module EventMachine
             "PortSpecs" => {
               :source => :port_specs,
             },
-            "Privileged" => {
-              :source => :privileged,
-            },
             "Tty" => {
               :source => :tty,
               :default => true,
@@ -72,6 +69,12 @@ module EventMachine
             },
             "WorkingDir" => {
               :source => :working_dir,
+            },
+            "DisableNetwork" => {
+              :source => :disable_network,
+            },
+            "ExposedPorts" => {
+              :source => :exposed_ports,
             },
           }
 
@@ -171,6 +174,27 @@ module EventMachine
           # POST /containers/(id)/start
 
           req_hash = {}
+
+          mapping = {
+            "PublishAllPorts" => {
+               :source => :publish_all_ports,
+            },
+            "Privileged" => {
+              :source  => :privileged,
+            },
+          }
+
+          mapping.each do |k,v|
+            if opts.key?( v[:source] )
+              req_hash[k] = opts[ v[:source] ]
+            else
+              if v.key?(:default)
+                req_hash[k] = v[:default]
+              elsif v.key?(:required)
+                raise ArgumentError, "#{k} must be specified when starting container"
+              end
+            end
+          end
 
           if opts[:lxc_conf]
             req_hash["LxcConf"] = []
