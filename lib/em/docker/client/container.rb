@@ -55,9 +55,6 @@ module EventMachine
             "Cmd" => {
               :source  => :cmd,
             },
-            "Dns" => {
-              :source  => :dns,
-            },
             "Image" => {
               :source => :image,
             },
@@ -176,11 +173,32 @@ module EventMachine
           req_hash = {}
 
           mapping = {
-            "PublishAllPorts" => {
-               :source => :publish_all_ports,
+            "ContainerIDFile" => {
+              :source  => :container_id_file,
             },
             "Privileged" => {
               :source  => :privileged,
+            },
+            "PortBindings" => {
+              :source  => :port_bindings,
+            },
+            "Links" => {
+               :source => :links,
+            },
+            "PublishAllPorts" => {
+               :source => :publish_all_ports,
+            },
+            "Dns" => {
+              :source  => :dns,
+            },
+            "DnsSearch" => {
+              :source  => :dns_search,
+            },
+            "VolumesFrom" => {
+               :source => :volumes_from,
+            },
+            "NetworkMode" => {
+               :source => :network_mode,
             },
           }
 
@@ -199,7 +217,7 @@ module EventMachine
           if opts[:lxc_conf]
             req_hash["LxcConf"] = []
             opts[:lxc_conf].each do |k,v|
-              req_hash << { "Key" => k, "Value" => v }
+              req_hash["LxcConf"] << { "Key" => k, "Value" => v }
             end
           end
 
