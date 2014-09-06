@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.files         = glob
   gem.name          = "em-docker-client"
   gem.require_paths = ["lib"]
-  gem.version       = 0.1
+  gem.version       = '0.2.0'
 
   gem.add_dependency("eventmachine", "~> 1.0.3")
   gem.add_dependency("em-http-request", "~> 1.0.3")
