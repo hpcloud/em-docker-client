@@ -262,6 +262,13 @@ module EventMachine
           # POST /containers/(id)/attach
           # this is a stream
         end
+
+        def logs(opts={}, &block)
+          # GET /containers/(id)/logs
+          opts = opts.merge( :follow => block_given? )
+          query_params = @client._parse_query_params( ['stdout', 'stderr', 'follow', 'tail', 'timestamps'], opts )
+          @client._make_request :method => "GET", :path => "/containers/#{@id}/logs", :query_params => query_params, &block
+        end
         
         def wait
           # POST /containers/(id)/wait
