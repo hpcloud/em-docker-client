@@ -161,6 +161,7 @@ module EventMachine
 
         http = nil
         req_opts = {}
+        req_opts[:inactivity_timeout] = opts[:timeout] if opts.include?(:timeout)
         req_opts[:inactivity_timeout] = 0 if block_given? # don't close stream for inactivity
         if ( (method == 'post') && data ) # we have to use a special case for post-ed data
           http = EventMachine::HttpRequest.new(full_path, req_opts).post({ :body => data, :query => query_params, :head => headers })

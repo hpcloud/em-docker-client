@@ -273,7 +273,7 @@ module EventMachine
         def wait
           # POST /containers/(id)/wait
 
-          res = @client._make_request( :method => "POST", :path => "/containers/#{@id}/wait", :expect => 'json')
+          res = @client._make_request( :method => "POST", :path => "/containers/#{@id}/wait", :expect => 'json', :timeout => 0)
           return res["StatusCode"]
         end
 
