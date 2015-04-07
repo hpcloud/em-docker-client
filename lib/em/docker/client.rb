@@ -160,12 +160,23 @@ module EventMachine
         f = Fiber.current
 
         http = nil
+        req_opts = {}
+        req_opts[:inactivity_timeout] = opts[:timeout] if opts.include?(:timeout)
+        req_opts[:inactivity_timeout] = 0 if block_given? # don't close stream for inactivity
         if ( (method == 'post') && data ) # we have to use a special case for post-ed data
-          http = EventMachine::HttpRequest.new(full_path).post({ :body => data, :query => query_params, :head => headers })
+          http = EventMachine::HttpRequest.new(full_path, req_opts).post({ :body => data, :query => query_params, :head => headers })
         else
-          http = EventMachine::HttpRequest.new(full_path).send(method, { :query => query_params, :head => headers })
+          http = EventMachine::HttpRequest.new(full_path, req_opts).send(method, { :query => query_params, :head => headers })
         end
+
+        if block_given?
+          http.stream { |chunk| yield chunk }
+
+          return # We can't wait for first chunk, because that might not come for a long time
+        end
+
         http.errback { f.resume(http) }
+
         http.callback { f.resume(http) }
 
         Fiber.yield 
