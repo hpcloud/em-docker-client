@@ -120,7 +120,12 @@ module EventMachine
 
       def image(name)
         # GET /images/(name)/json
-        # returns EM::Docker::Client::Image object
+
+        # This endpoint is not a single form of /images/json, it returns the
+        # specific details about an image.
+        _make_request(method: 'GET',
+                      path: "/images/#{name}/json",
+                      expect: 'json')
       end
 
       def _parse_query_params(params, opts)
