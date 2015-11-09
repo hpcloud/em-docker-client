@@ -116,7 +116,6 @@ module EventMachine
             query_params = nil
           end
 
-
           res = @client._make_request( :method => 'POST', :path => "/containers/create", :query_params => query_params, :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
 
