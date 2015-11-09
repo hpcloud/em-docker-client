@@ -73,6 +73,9 @@ module EventMachine
             "ExposedPorts" => {
               :source => :exposed_ports,
             },
+            "Entrypoint" => {
+              :source => :entrypoint,
+            },
           }
 
           mapping.each do |k,v|
@@ -97,8 +100,12 @@ module EventMachine
             end
           end
 
-          if opts[:cmd]
-            req_hash["Cmd"] = Shellwords.shellwords(opts[:cmd])
+          if opts[:cmd] && (opts[:cmd].class == String)
+            req_hash['Cmd'] = Shellwords.shellwords(opts[:cmd])
+          end
+
+          if opts[:entry] && (opts[:entry].class == String)
+            req_hash['Entrypoint'] = Shellwords.shellwords(opts[:entry])
           end
 
           @client ||= opts[:client]
@@ -108,6 +115,7 @@ module EventMachine
           else
             query_params = nil
           end
+
 
           res = @client._make_request( :method => 'POST', :path => "/containers/create", :query_params => query_params, :expect => 'json', :content_type => 'application/json', :data => req_hash)
           container_id = res["Id"]
