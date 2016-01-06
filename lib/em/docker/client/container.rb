@@ -228,6 +228,10 @@ module EventMachine
             end
           end
 
+          if opts[:log_opt]
+            req_hash["LogConfig"] = { "Type" => "json-file", "Config" => opts[:log_opt] }
+          end
+
           if opts[:bind_mounts]
             @bind_mounts = opts[:bind_mounts]
           end
